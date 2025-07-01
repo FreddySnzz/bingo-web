@@ -1,6 +1,7 @@
 'use client';
 
 import { ButtonShadUI } from "@/components/Button";
+import BingoSVGIcon from "@/components/icons/BingoSVGIcon";
 import InputWithTitle from "@/components/InputWithTitle";
 import { 
   HomeScreenImageBackground, 
@@ -17,8 +18,7 @@ export default function Home() {
       <HomeScreenImageBackground />
       <HomeScreenContainerLogin>
         <LoginContainer>
-          <span>LOGO</span>
-          <h1>Welcome to the Game App</h1>
+          <BingoSVGIcon fill="white" width={150} height={150}/>
           <LimitedContainerFormLogin>
             <InputWithTitle title="Nome" placeholder="Digite seu nome" />
           </LimitedContainerFormLogin>

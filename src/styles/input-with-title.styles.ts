@@ -16,5 +16,4 @@ export const LabelInputWithTitle = styled.label`
   color: #fff;
   margin-top: 6px;
   margin-bottom: 12px;
-  margin-left: 12px;
 `;
