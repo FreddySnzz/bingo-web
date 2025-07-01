@@ -1,14 +1,27 @@
 import { Button } from "@/components/ui/button"
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   onClick?: () => void;
-}
+  className?: string; 
+  size?: "default" | "sm" | "lg" | "icon";
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+};
 
-export function ButtonShadUI({ children, onClick }: ButtonProps) {
+export function ButtonShadUI({ 
+  children, 
+  onClick, 
+  className, 
+  variant,
+  size,
+}: ButtonProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 md:flex-row">
-      <Button onClick={onClick}>{children}</Button>
-    </div>
-  )
-}
+    <Button 
+      onClick={onClick} 
+      className={className} 
+      variant={variant} 
+      size={size}>
+        {children}
+    </Button>
+  );
+};

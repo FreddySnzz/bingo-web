@@ -12,19 +12,36 @@ export const HomeScreenImageBackground = styled.div`
   z-index: -1;
 `;
 
-export const LoginContainer = styled.div`
+export const LimitedContainerIcon = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 5%;
+`;
+
+export const LoginContainerForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  max-width: 550px;
+`;
+
+export const LoginContainer = styled.div`
+  display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   max-width: 375px;
   height: 80vh;
+  max-height: 60vh;
   padding: 22px;
   z-index: 1;
   background-color: rgb(39, 40, 102);
   opacity: 0.99;
-  color: #ffffff;
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 1);
   border-radius: 60px;
@@ -39,10 +56,9 @@ export const LimitedContainerFormLogin = styled.div`
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  max-width: 498px;
 `;
 
-export const HomeScreenContainerLogin = styled.div`
+export const HomeScreenContainer = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;

@@ -6,27 +6,38 @@ import InputWithTitle from "@/components/InputWithTitle";
 import { 
   HomeScreenImageBackground, 
   LimitedContainerFormLogin,
-  HomeScreenContainerLogin,
+  HomeScreenContainer,
   LoginContainer,
-  GradientBackground
+  GradientBackground,
+  LimitedContainerIcon,
+  LoginContainerForm
  } from "@/styles/homeScreen.styles";
+import { useState } from "react";
 
 export default function Home() {
+  const [userName, setUserName] = useState('');
+
+  const handleUserNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserName(event.target.value);
+  };
+
   return (
     <>
       <GradientBackground />
       <HomeScreenImageBackground />
-      <HomeScreenContainerLogin>
+      <HomeScreenContainer>
         <LoginContainer>
-          <BingoSVGIcon fill="white" width={150} height={150}/>
-          <LimitedContainerFormLogin>
-            <InputWithTitle title="Nome" placeholder="Digite seu nome" />
-          </LimitedContainerFormLogin>
-          <ButtonShadUI>
-            <a href="/game/1">Enter in game 1</a>
-          </ButtonShadUI>
+          <LoginContainerForm>
+            <LimitedContainerIcon>
+              <BingoSVGIcon fill="white" width={150} height={150}/>
+            </LimitedContainerIcon>
+            <LimitedContainerFormLogin>
+              <InputWithTitle title="Nome:" placeholder="Digite seu nome" className="bg-white" value={userName} onChange={handleUserNameChange}/>
+            </LimitedContainerFormLogin>
+            <ButtonShadUI variant="default" size="lg" className="font-bold text-md mt-4">PROCURAR SALAS</ButtonShadUI>
+          </LoginContainerForm>
         </LoginContainer>
-      </HomeScreenContainerLogin>
+      </HomeScreenContainer>
     </>
   );
 }
