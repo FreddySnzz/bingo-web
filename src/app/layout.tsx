@@ -1,14 +1,19 @@
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "../styles/globals.css";
-
-import Footer from "@/components/Footer";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" suppressHydrationWarning>
       <body>
-        <main>{children}</main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
-      {/* <Footer /> */}
     </html>
   );
-};
+}

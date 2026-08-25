@@ -11,15 +11,16 @@ import UserSVGIcon from "./icons/UserSVGIcon";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   title?: string; 
   placeholder?: string;
+  className?: string;
 }
 
-export default function Input({ title, placeholder, ...props }: InputProps) {
+export default function Input({ title, placeholder, className, ...props }: InputProps) {
   return (
     <InputWithTitleContainer>
       <LabelInputWithTitle className="font-bold text-lg">{title}</LabelInputWithTitle>
       <ContainerInput>
         <UserSVGIcon fill="white"/>
-        <InputShadcn placeholder={placeholder} {...props}/>
+        <InputShadcn placeholder={placeholder} {...props} className={className}/>
       </ContainerInput>
     </InputWithTitleContainer>
   );

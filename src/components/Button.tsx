@@ -1,19 +1,22 @@
 import { Button } from "@/components/ui/button"
+import { Loader2Icon } from "lucide-react"
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  text?: string;
   onClick?: () => void;
   className?: string; 
   size?: "default" | "sm" | "lg" | "icon";
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  isLoading?: boolean;
 };
 
 export function ButtonShadUI({ 
-  children, 
+  text, 
   onClick, 
   className, 
   variant,
   size,
+  isLoading = false,
 }: ButtonProps) {
   return (
     <Button 
@@ -21,7 +24,8 @@ export function ButtonShadUI({
       className={className} 
       variant={variant} 
       size={size}>
-        {children}
+        {isLoading ? <Loader2Icon className="animate-spin" /> : null}
+        {text}
     </Button>
   );
 };
