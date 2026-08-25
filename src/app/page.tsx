@@ -3,7 +3,7 @@
 import { ButtonShadUI } from "@/components/Button";
 import Footer from "@/components/Footer";
 import BingoSVGIcon from "@/components/icons/BingoSVGIcon";
-import { ThemeToggle } from "@/components/ThemeToggle";
+// import { ThemeToggle } from "@/components/ThemeToggle";
 import CustomModal from "@/components/Modal";
 import InputWithTitle from "@/components/InputWithTitle";
 import { 
@@ -17,7 +17,7 @@ import {
  } from "@/styles/homeScreen.styles";
  
  import { useState } from "react";
- import { useRouter } from "next/navigation";
+//  import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [userName, setUserName] = useState('');
@@ -25,7 +25,7 @@ export default function Home() {
   const [buttonText, setButtonText] = useState('PROCURAR SALAS');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleUserNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUserName(event.target.value);

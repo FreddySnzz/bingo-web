@@ -139,7 +139,7 @@ export default function JvzinBingoPage() {
     }
 
     const shuffled = shuffleArray(bingoPhrases);
-    setShufflePhoto(Math.floor(Math.random() * 6) + 1);
+    setShufflePhoto(Math.floor(Math.random() * 11) + 1);
     setShuffledTiles(shuffled);
   }, []);
 
