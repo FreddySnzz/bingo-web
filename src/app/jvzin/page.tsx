@@ -2,66 +2,46 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Play, Repeat } from "lucide-react";
+import { BrushCleaning, Dices, Play } from "lucide-react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+interface BingoState {
+  shuffledTiles: string[];
+  shufflePhoto: number;
+  markedTiles: string[];
+  tileRotations: Record<string, number>;
+  createdAt: number | null;
+  isContinuing: boolean;
+  _hasHydrated: boolean;
+  
+  generateNewBoard: (phrases: string[]) => void;
+  toggleTile: (tile: string, degree: number) => void;
+  resetGame: () => void;
+  setContinuing: (value: boolean) => void;
+  setHasHydrated: (state: boolean) => void;
+}
 
 const bingoPhrases = [
-  "Negao vai se lasca",
-  "Negao vai pro inferno",
-  "Vou ja come um amori",
-  "Oia esse cara",
-  "La ele",
-  "Ah nao, vamo joga no inferno",
-  "Sai dai",
-  ".",
-  "Nau",
-  "E um churras? @André",
-  "Vou já assistir um sobrenatural", 
-  "Pegue na minha caceta", 
-  "Conta aqui pro tio joao vicente", 
-  "É um gtazin @Fredson Luiz @Lyncxxx", 
-  "Ne meu fi não", 
-  "Que isso rpz", 
-  "Rpz, vao se lascar vcs tudin", 
-  "Vai tu, quenga", 
-  "O Lyncu não oferece um copo d'água", 
-  "To fazendo exportação", 
-  "Que porra", 
-  "Vou ja tempera a carne", 
-  "Tenho pai não", 
-  "Vai da esse teu tabaco",
+  "Negao vai se lasca", "Negao vai pro inferno", "Vou ja come um amori", "Oia esse cara", "La ele",
+  "Ah nao, vamo joga no inferno", "Sai dai", ".", "Nau", "E um churras? @André", "Vou já assistir um sobrenatural", 
+  "Pegue na minha caceta", "Conta aqui pro tio joao vicente", "É um gtazin @Fredson Luiz @Lyncxxx", "Ne meu fi não", 
+  "Que isso rpz", "Rpz, vao se lascar vcs tudin", "Vai tu, quenga", "O Lyncu não oferece um copo d'água", "To fazendo exportação", 
+  "Que porra", "Vou ja tempera a carne", "Tenho pai não", "Vai da esse teu tabaco", "Um buiaco na paiede"
 ]
 
 const WINNING_COMBINATIONS: number[][] = [
   // Horizontais
-  [0, 1, 2, 3, 4], 
-  [5, 6, 7, 8, 9], 
-  [10, 11, 12, 13, 14], 
-  [15, 16, 17, 18, 19], 
-  [20, 21, 22, 23, 24],
+  [0, 1, 2, 3, 4], [5, 6, 7, 8, 9], [10, 11, 12, 13, 14], [15, 16, 17, 18, 19], [20, 21, 22, 23, 24],
   // Verticais
-  [0, 5, 10, 15, 20], 
-  [1, 6, 11, 16, 21], 
-  [2, 7, 12, 17, 22], 
-  [3, 8, 13, 18, 23], 
-  [4, 9, 14, 19, 24],
+  [0, 5, 10, 15, 20],  [1, 6, 11, 16, 21], [2, 7, 12, 17, 22], [3, 8, 13, 18, 23], [4, 9, 14, 19, 24],
   // Diagonais
-  [0, 6, 12, 18, 24], 
-  [4, 8, 12, 16, 20],
+  [0, 6, 12, 18, 24], [4, 8, 12, 16, 20],
   // Quinas
   [0, 4, 20, 24],
   // Quadrantes
-  [0, 1, 5, 6], 
-  [1, 2, 6, 7], 
-  [2, 3, 7, 8], 
-  [3, 4, 8, 9],
-  [5, 6, 10, 11], 
-  [8, 9, 13, 14],
-  [10, 11, 15, 16], 
-  [13, 14, 18, 19],
-  [15, 16, 20, 21], 
-  [16, 17, 21, 22], 
-  [17, 18, 22, 23], 
-  [18, 19, 23, 24],
+  [0, 1, 5, 6], [1, 2, 6, 7], [2, 3, 7, 8], [3, 4, 8, 9], [5, 6, 10, 11], [8, 9, 13, 14], [10, 11, 15, 16], 
+  [13, 14, 18, 19], [15, 16, 20, 21], [16, 17, 21, 22], [17, 18, 22, 23], [18, 19, 23, 24],
   // Cartela cheia
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24] 
 ]
@@ -71,83 +51,105 @@ const getDegree = () => {
   return degrees[Math.floor(Math.random() * degrees.length)];
 }
 
+const checkWin = (currentMarked: string[], shuffledTiles: string[]) => {
+  if (shuffledTiles.length === 0) return false;
+
+  const isIndexMarked = (index: number) => {
+    if (index === 12) return true;
+    const tileText = index > 12 ? shuffledTiles[index - 1] : shuffledTiles[index];
+    return currentMarked.includes(tileText);
+  }
+
+  return WINNING_COMBINATIONS.some(combo => combo.every(isIndexMarked));
+}
+
+const useBingoStore = create<BingoState>()(
+  persist(
+    (set, get) => ({
+      shuffledTiles: [],
+      shufflePhoto: 1,
+      markedTiles: [],
+      tileRotations: {},
+      createdAt: null,
+      isContinuing: false,
+      _hasHydrated: false,
+
+      generateNewBoard: (phrases: string[]) => {
+        const shuffled = [...phrases];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        
+        set({
+          shuffledTiles: shuffled,
+          shufflePhoto: Math.floor(Math.random() * 11) + 1,
+          markedTiles: [],
+          tileRotations: {},
+          createdAt: Date.now(),
+          isContinuing: false,
+        });
+      },
+
+      toggleTile: (tile: string, degree: number) => {
+        const { markedTiles, tileRotations } = get();
+        const isMarked = markedTiles.includes(tile);
+
+        if (isMarked) {
+          set({ markedTiles: markedTiles.filter((t: string) => t !== tile) });
+        } else {
+          set({
+            markedTiles: [...markedTiles, tile],
+            tileRotations: { ...tileRotations, [tile]: degree }
+          });
+        }
+      },
+
+      resetGame: () => set({ markedTiles: [], tileRotations: {}, isContinuing: false }),
+      setContinuing: (value: boolean) => set({ isContinuing: value }),
+      setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
+    }),
+    { 
+      name: '@jvzin-bingo-storage',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      }
+    }
+  )
+)
+
 export default function JvzinBingoPage() {
-  const [shuffledTiles, setShuffledTiles] = useState<string[]>([]);
-  const [markedTiles, setMarkedTiles] = useState<string[]>([]);
-  const [shufflePhoto, setShufflePhoto] = useState<number>(1);
-  const [tileRotations, setTileRotations] = useState<Record<string, number>>({});
-  const [hasWon, setHasWon] = useState<boolean>(false);
-  const [showVictoryScreen, setShowVictoryScreen] = useState<boolean>(false);
-  const [isFullCard, setIsFullCard] = useState<boolean>(false);
-  const [isContinuing, setIsContinuing] = useState<boolean>(false);
-
-  const handleMarkTile = (tile: string) => {
-    let newMarkedTiles: string[];
-    let isAdding = false;
-
-    if (!markedTiles.includes(tile)) {
-      newMarkedTiles = [...markedTiles, tile];
-      isAdding = true;
-    } else {
-      newMarkedTiles = markedTiles.filter(t => t !== tile);
-    }
-
-    const currentHasWon = checkWin(newMarkedTiles);
-    const currentIsFullCard = newMarkedTiles.length === shuffledTiles.length;
-    
-    let currentIsContinuing = isContinuing;
-
-    if (!currentHasWon) {
-      currentIsContinuing = false;
-      setIsContinuing(false);
-    }
-
-    setMarkedTiles(newMarkedTiles);
-    setHasWon(currentHasWon);
-    setIsFullCard(currentIsFullCard);
-    
-    setShowVictoryScreen((currentHasWon && !currentIsContinuing) || currentIsFullCard);
-
-    if (isAdding) {
-      setTileRotations(prev => ({
-        ...prev,
-        [tile]: getDegree()
-      }));
-    }
-  }
-
-  const checkWin = (currentMarked: string[]) => {
-    if (shuffledTiles.length === 0) return false;
-
-    const isIndexMarked = (index: number) => {
-      if (index === 12) return true; 
-      const tileText = index > 12 ? shuffledTiles[index - 1] : shuffledTiles[index];
-      return currentMarked.includes(tileText);
-    }
-
-    return WINNING_COMBINATIONS.some(combo => combo.every(isIndexMarked));
-  }
+  const store = useBingoStore();
 
   useEffect(() => {
-    function shuffleArray(array: string[]) {
-      const newArray = [...array];
-      for (let i = newArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    if (store._hasHydrated) {
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+      
+      if (!store.createdAt || (Date.now() - store.createdAt > TWENTY_FOUR_HOURS)) {
+        store.generateNewBoard(bingoPhrases);
       }
-      return newArray;
     }
+  }, [store._hasHydrated]);
 
-    const shuffled = shuffleArray(bingoPhrases);
-    setShufflePhoto(Math.floor(Math.random() * 11) + 1);
-    setShuffledTiles(shuffled);
-  }, []);
+  const hasWon = checkWin(store.markedTiles, store.shuffledTiles);
+  const isFullCard = store.markedTiles.length === 24;
+  const showVictoryScreen = (hasWon && !store.isContinuing) || isFullCard;
+
+  useEffect(() => {
+    if (!hasWon && store.isContinuing) {
+      store.setContinuing(false);
+    }
+  }, [hasWon, store.isContinuing, store]);
+
+  if (!store._hasHydrated || store.shuffledTiles.length === 0) {
+    return <div className="min-h-dvh flex items-center justify-center bg-zinc-900" />;
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-dvh p-2 sm:p-4">
       <div className="relative w-full max-w-[800px] aspect-square">
         <Image
-          src={"/bingo-jvzin-without-p.png"}
+          src={"/bingo-jvzin.png"}
           alt="Jvzin Bingo"
           fill
           className="object-contain"
@@ -166,10 +168,10 @@ export default function JvzinBingoPage() {
                 >
                   <div className="relative w-[100%] h-[100%]">
                     <Image
-                      src={`/jvzin${shufflePhoto}.png`}
+                      src={`/jvzin${store.shufflePhoto}.png`}
                       alt="Jvzin Bingo"
                       fill
-                      className="object-fill hover:scale-505 transition-all ease-in-out duration-300"
+                      className="object-fill hover:scale-500 transition-all ease-in-out duration-300"
                       priority
                     />
                   </div>
@@ -178,17 +180,17 @@ export default function JvzinBingoPage() {
             }
 
             const tileIndex = index > 12 ? index - 1 : index;
-            const tile = shuffledTiles[tileIndex];
+            const tile = store.shuffledTiles[tileIndex];
 
             if (!tile) return <div key={`empty-${index}`} />;
 
-            const isMarked = markedTiles.includes(tile);
+            const isMarked = store.markedTiles.includes(tile);
 
             return (
               <div
                 key={tile}
-                onClick={() => handleMarkTile(tile)}
-                className={"relative cursor-pointer transition-all ease-in-out duration-300 flex items-center justify-center"}
+                onClick={() => store.toggleTile(tile, getDegree())}
+                className={"relative cursor-pointer transition-all ease-in-out duration-300 flex items-center justify-center hover:scale-110"}
               >
                 {isMarked && (
                   <div className="absolute inset-0 z-30 transition-all ease-in-out duration-300">
@@ -197,29 +199,43 @@ export default function JvzinBingoPage() {
                       alt="Milho"
                       fill
                       className="object-fill hover:opacity-20 transition-all ease-in-out duration-300"
-                      style={{ transform: `rotate(${tileRotations[tile] || 0}deg)` }}
+                      style={{ transform: `rotate(${store.tileRotations[tile] || 0}deg)` }}
                       priority
                     />
                   </div>
                 )}
                 
-                <p className={`relative z-10 w-full px-1 text-[8px] sm:text-xs md:text-sm font-bold 
-                  items-center justify-center text-center line-clamp-3 hover:scale-115 transition-all`
+                <p className={`relative z-10 w-full px-3 text-[8px] sm:text-xs md:text-sm 
+                  font-bold items-center justify-center text-center line-clamp-3`
                 }>
                   {tile}
                 </p>
               </div>
-            );
+            )
           })}
         </div>
       </div>
 
-      {showVictoryScreen && hasWon && (
-        <div className="fixed inset-0 flex flex-col justify-center items-center bg-purple-200/90 z-50 px-4">
+      <div className="mt-1">
+        <button
+          type="button"
+          onClick={() => store.generateNewBoard(bingoPhrases)}
+          className={`flex gap-2 items-center justify-center px-6 py-2 rounded-xl cursor-pointer 
+            bg-zinc-200 hover:bg-zinc-300 text-zinc-700 hover:text-zinc-900 font-bold hover:shadow-lg transition-all
+          `}
+        >
+          <Dices className="w-5 h-5" /> Gerar nova cartela
+        </button>
+      </div>
+
+      {showVictoryScreen && (
+        <div className="fixed inset-0 flex flex-col justify-center items-center bg-purple-200/95 z-50 px-4">
           <div className="flex flex-col items-center justify-center mb-6">
-            <h1 className="text-center text-3xl md:text-5xl font-black">BINGOOOO!!!</h1>
-            <p className="text-center font-medium mt-2 text-sm md:text-base">
-              {isFullCard ? "Você marcou a cartela inteira!" : "Parabéns pela conquista!"} Resgate seu prêmio abaixo.
+            <h1 className="text-center text-3xl md:text-6xl font-black">
+              BINGOOOO!!!
+            </h1>
+            <p className="text-center font-bold mt-2 text-sm md:text-base">
+              {isFullCard ? "Você marcou a cartela inteira!" : "Parabéns pela conquista! Ele está pronto..."} Resgate seu prêmio abaixo.
             </p>
           </div>
 
@@ -237,30 +253,24 @@ export default function JvzinBingoPage() {
             <button
               type="button"
               onClick={() => {
-                setMarkedTiles([]);
-                setHasWon(false);
-                setIsFullCard(false);
-                setIsContinuing(false);
-                setShowVictoryScreen(false);
+                isFullCard && store.toggleTile(store.markedTiles[store.markedTiles.length - 1], 0);
+                store.setContinuing(true)
               }}
-              className={`flex gap-2 items-center justify-center px-6 py-3 rounded-xl cursor-pointer 
-                bg-zinc-700 hover:bg-zinc-800 font-bold text-zinc-50 shadow-lg transition-all
-              `}
-            >
-              <Repeat className="w-5 h-5" /> Repetir
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsContinuing(true);
-                setShowVictoryScreen(false); 
-              }}
-              className={`flex gap-2 items-center justify-center px-6 py-3 rounded-xl cursor-pointer 
+              className={`flex gap-2 items-center justify-center px-6 py-2 rounded-xl cursor-pointer 
                 bg-purple-900 hover:bg-purple-950 font-bold text-zinc-50 shadow-lg transition-all
               `}
             >
               <Play className="w-5 h-5" /> Continuar
+            </button>
+
+            <button
+              type="button"
+              onClick={() => store.resetGame()}
+              className={`flex gap-2 items-center justify-center px-6 py-2 rounded-xl cursor-pointer 
+                bg-zinc-700 hover:bg-zinc-800 font-bold text-zinc-50 shadow-lg transition-all
+              `}
+            >
+              <BrushCleaning className="w-5 h-5" /> Limpar e manter cartela
             </button>
           </div>
         </div>
